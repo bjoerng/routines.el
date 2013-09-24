@@ -1,0 +1,110 @@
+routines  -*- mode: org; fill-column: 70 -*-
+
+* GTD-Baskets
+** Business-Days
+** WeekDays
+*** Montag
+*** Dienstag
+*** Mittwoch
+*** Donnerstag
+*** Freitag
+*** Samstag
+*** Sonntag
+** DayMonth
+*** md01
+*** md02
+*** md03
+*** md04
+*** md05
+*** md06
+*** md07
+*** md08
+*** md09
+*** md10
+*** md11
+*** md12
+*** md13
+*** md14
+*** md15
+*** md16
+*** md17
+*** md18
+*** md19
+*** md20
+*** md21
+*** md22
+*** md23
+*** md24
+*** md25
+*** md26
+*** md27
+*** md28
+*** md29
+*** md30
+*** md31
+** WeekOfTheYear
+*** WotY01 2014
+*** WotY02 2014
+*** WotY02 2014
+*** WotY03 2014
+*** WotY04 2014
+*** WotY05 2014
+*** WotY06 2014
+*** WotY07 2014
+*** WotY08 2014
+*** WotY09 2014
+*** WotY10 2014
+*** WotY11 2014
+*** WotY12 2014
+*** WotY13 2014
+*** WotY14 2014
+*** WotY15 2014
+*** WotY16 2014
+*** WotY17 2014
+*** WotY18 2014
+*** WotY19 2014
+*** WotY20 2014
+*** WotY21 2014
+*** WotY22 2014
+*** WotY23 2014
+*** WotY24 2014
+*** WotY25 2013
+*** WotY26 2014
+*** WotY27 2014
+*** WotY28 2014
+*** WotY29 2014
+*** WotY30 2014
+*** WotY31 2014
+*** WotY32 2014
+*** WotY33 2014
+*** WotY34 2014
+*** WotY35 2014
+*** WotY36 2013
+*** WotY37 2013
+*** WotY38 2014
+*** WotY39 2014
+*** WotY40 2013
+*** WotY41 2013
+*** WotY42 2013
+*** WotY43 2013
+*** WotY44 2013
+*** WotY45 2013
+*** WotY46 2013
+*** WotY47 2013
+*** WotY48 2013
+*** WotY49 2013
+*** WotY50 2013
+*** WotY51 2012
+*** WotY52 2013
+** Januar 2014
+** Februar 2014
+** Maerz 2013
+** April 2014
+** Mai 2014
+** Juni 2014
+** Juli 2014
+** August 2014
+** September 2014
+** Oktober 2013
+** November 2013
+** Dezember 2013
