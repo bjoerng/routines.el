@@ -31,6 +31,37 @@
 ;;
 ;;; Code:
 
+
+(format-time-string "%A" (date-to-time "Tue, 05-Jan-70 00:00:1 EST"))
+
+(defun routines-insert-skeleton ()
+  (interactive)
+  (insert "* GTD-Baskets\n")
+  (insert "** Business-Days\n")
+  (insert "** WeekDays\n")
+  (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 05-Jan-70 00:00:1 EST" )) "\n"))
+  (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 06-Jan-70 00:00:1 EST")) "\n"))
+  (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 07-Jan-70 00:00:1 EST"))) "\n")
+  (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 08-Jan-70 00:00:1 EST")) "\n"))
+  (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 09-Jan-70 00:00:1 EST")) "\n"))
+  (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 10-Jan-70 00:00:1 EST")) "\n"))
+  (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 11-Jan-70 00:00:1 EST")) "\n"))
+  (insert "** DayMonth")
+  (let ((dm 1))
+    (while (<= dm 31)
+      (insert (concat "*** md" (number-to-string dm) "\n"))
+      (setf dm (1+ dm))))
+  (let ((thisyear (string-to-number (format-time-string "%Y")))
+	(thisweek (string-to-number (format-time-string "%V")))
+	(tmpweek 1))
+    (while (<= tmpweek 52)
+      (if (< tmpweek thisweek) 
+	  (insert (format  "***WotY%02d %d\n" tmpweek thisyear))
+	(insert (format  "***WotY%02d %d\n" tmpweek (1+ thisyear))))
+      (setf tmpweek (1+ tmpweek)))))
+  
+    
+
 ;; '(String Char) -> Number 
 (defun routines-count-char-at-beginning (strng chr)
   (let ((result 0)
@@ -39,7 +70,6 @@
 	  (setf tmpstrng (substring tmpstrng  1 (length tmpstrng)))
 	  (setf result (1+ result)))
     result))
-
 
 ;; String -> String
 (defun routines-remove-n-stars-from-line (strng n)
