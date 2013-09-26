@@ -51,14 +51,16 @@
     (while (<= dm 31)
       (insert (concat "*** md" (number-to-string dm) "\n"))
       (setf dm (1+ dm))))
-  (let ((thisyear (string-to-number (format-time-string "%Y")))
-	(thisweek (string-to-number (format-time-string "%V")))
-	(tmpweek 1))
-    (while (<= tmpweek 52)
-      (if (< tmpweek thisweek) 
-	  (insert (format  "***WotY%02d %d\n" tmpweek thisyear))
-	(insert (format  "***WotY%02d %d\n" tmpweek (1+ thisyear))))
+  (let ((thisyear (string-to-number (format-time-string "%Y"))))
+    (let ((thisweek (string-to-number (format-time-string "%V")))
+	  (tmpweek 1))
+      (while (<= tmpweek 52)
+	(if (< tmpweek thisweek) 
+	    (insert (format  "***WotY%02d %d\n" tmpweek thisyear))
+	  (insert (format  "***WotY%02d %d\n" tmpweek (1+ thisyear))))
       (setf tmpweek (1+ tmpweek)))))
+  
+  
   
     
 
