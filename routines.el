@@ -31,14 +31,13 @@
 ;;
 ;;; Code:
 
-
-(format-time-string "%A" (date-to-time "Tue, 05-Jan-70 00:00:1 EST"))
-
 (defun routines-insert-skeleton ()
   (interactive)
   (insert "* GTD-Baskets\n")
   (insert "** Business-Days\n")
   (insert "** WeekDays\n")
+  ;; The following solutions is a workaround, until i find out how to
+  ;; insert the days in a week in a smarter way.
   (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 05-Jan-70 00:00:1 EST" )) "\n"))
   (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 06-Jan-70 00:00:1 EST")) "\n"))
   (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 07-Jan-70 00:00:1 EST"))) "\n")
@@ -46,23 +45,38 @@
   (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 09-Jan-70 00:00:1 EST")) "\n"))
   (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 10-Jan-70 00:00:1 EST")) "\n"))
   (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 11-Jan-70 00:00:1 EST")) "\n"))
-  (insert "** DayMonth")
+  ;; Now the Days in Month a inserted 
+  (insert "** DayMonth\n")
   (let ((dm 1))
     (while (<= dm 31)
       (insert (concat "*** md" (number-to-string dm) "\n"))
       (setf dm (1+ dm))))
+  ;; Now the weeks in a years are inserted, by determining the actual
+  ;; year, and the actual week. As long as tmpweek ist lower or equal
+  ;; than thisweek, the next year will be inserted. When the tmpweek
+  ;; ist greater than thisweek, the actual year will be inserted.
+  (insert "** WeekOfTheYear\n")
   (let ((thisyear (string-to-number (format-time-string "%Y"))))
     (let ((thisweek (string-to-number (format-time-string "%V")))
 	  (tmpweek 1))
       (while (<= tmpweek 52)
 	(if (< tmpweek thisweek) 
-	    (insert (format  "***WotY%02d %d\n" tmpweek thisyear))
-	  (insert (format  "***WotY%02d %d\n" tmpweek (1+ thisyear))))
-      (setf tmpweek (1+ tmpweek)))))
-  
-  
-  
-    
+	    (insert (format  "*** WotY%02d %d\n" tmpweek thisyear))
+	  (insert (format  "*** WotY%02d %d\n" tmpweek (1+ thisyear))))
+      (setf tmpweek (1+ tmpweek))))
+    ;; Now The Month are inserted analog to the weeks.
+    (mapc #'(lambda (item) (insert (concat "** "(car item) " " (number-to-string (cdr item)) "\n")))
+	 (cl-mapcar #'cons
+		    (let ((month 12)
+			  (result nil))
+		      (while (>= month 1)
+			(push (format-time-string "%B" 
+						  (date-to-time (format "1970-%d-05 00:01 EST" month))) 
+			      result)
+			(setf month (1- month)))
+		      result)
+		    (let ((this-month (string-to-number (format-time-string "%m"))))
+		      (append (make-list this-month thisyear) (make-list (- 12 9) (1+ thisyear))))))))
 
 ;; '(String Char) -> Number 
 (defun routines-count-char-at-beginning (strng chr)
