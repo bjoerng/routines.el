@@ -80,6 +80,7 @@
 
 ;; '(String Char) -> Number 
 (defun routines-count-char-at-beginning (strng chr)
+	"Takes a string strng and a charakter char and returns the count of chr at the beginnng of strng"
   (let ((result 0)
 	(tmpstrng strng))
     (while (= (string-to-char tmpstrng) 42)
