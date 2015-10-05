@@ -1,11 +1,11 @@
 ;;; routines.el --- Small addition to org-mode
 ;;
-;; Copyright (C) 2012-2013 Bjoern Graebe
+;; Copyright (C) 2012-2015 Bjoern Graebe
 ;;
 ;; Author: Bjoern Graebe <bjoern.graebe@fernuni-hagen.de>
 ;; Maintainer: Bjoern Graebe
 ;; Keywords: outlines, hypermedia, calendar, wp
-;; Homepage: none, at the moment
+;; Homepage: https://github.com/bjoerng/routines.el
 ;;
 ;; routines.el is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -27,10 +27,26 @@
 ;;; - Function which determines if there is a routline-tree for today
 ;;; - Function to insert new Today in an existing tree
 ;;; - Function which builds a Skeleton-Tree
+;;; - Function to prepare GTD-tree for a new year
 ;;; Commentary:
 ;;
 ;;; Code:
 
+;;----------------------------------------------------------------------
+;; Constants
+
+(defconst starchar 42)
+; The special characters for Regexp in Emacs
+(defconst routines-rexexp-special-characters
+  '(46 starchar 43 63 94 36 92 91))
+(defconst gtd-container-root-string "GTD-Baskets")
+(defconst gtd-business-day-string "Business-Days")
+(defconst gtd-weekday-string "WeekDays")
+(defconst gtd-daymonth-string "DayMonth")
+(defconst gtd-weekyear-string "WeekOfTheYear")
+;;----------------------------------------------------------------------
+
+;; This is a mess!
 (defun routines-insert-skeleton ()
   (interactive)
   (insert "* GTD-Baskets\n")
@@ -38,14 +54,21 @@
   (insert "** WeekDays\n")
   ;; The following solutions is a workaround, until i find out how to
   ;; insert the days in a week in a smarter way.
-  (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 05-Jan-70 00:00:1 EST" )) "\n"))
-  (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 06-Jan-70 00:00:1 EST")) "\n"))
-  (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 07-Jan-70 00:00:1 EST"))) "\n")
-  (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 08-Jan-70 00:00:1 EST")) "\n"))
-  (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 09-Jan-70 00:00:1 EST")) "\n"))
-  (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 10-Jan-70 00:00:1 EST")) "\n"))
-  (insert (concat "*** " (format-time-string "%A" (date-to-time "Tue, 11-Jan-70 00:00:1 EST")) "\n"))
-  ;; Now the Days in Month a inserted 
+  (insert (concat "*** "
+		  (format-time-string "%A" (date-to-time "Tue, 05-Jan-70 00:00:1 EST" )) "\n"))
+  (insert (concat "*** "
+		  (format-time-string "%A" (date-to-time "Tue, 06-Jan-70 00:00:1 EST")) "\n"))
+  (insert (concat "*** "
+		  (format-time-string "%A" (date-to-time "Tue, 07-Jan-70 00:00:1 EST"))) "\n")
+  (insert (concat "*** "
+		  (format-time-string "%A" (date-to-time "Tue, 08-Jan-70 00:00:1 EST")) "\n"))
+  (insert (concat "*** "
+		  (format-time-string "%A" (date-to-time "Tue, 09-Jan-70 00:00:1 EST")) "\n"))
+  (insert (concat "*** "
+		  (format-time-string "%A" (date-to-time "Tue, 10-Jan-70 00:00:1 EST")) "\n"))
+  (insert (concat "*** "
+		  (format-time-string "%A" (date-to-time "Tue, 11-Jan-70 00:00:1 EST")) "\n"))
+  ;; Now the Days in Month are inserted 
   (insert "** DayMonth\n")
   (let ((dm 1))
     (while (<= dm 31)
@@ -65,31 +88,37 @@
 	  (insert (format  "*** WotY%02d %d\n" tmpweek (1+ thisyear))))
       (setf tmpweek (1+ tmpweek))))
     ;; Now The Month are inserted analog to the weeks.
-    (mapc #'(lambda (item) (insert (concat "** "(car item) " " (number-to-string (cdr item)) "\n")))
+    (mapc #'
+     (lambda (item) (insert (concat "** "(car item) " " (number-to-string (cdr item)) "\n")))
 	 (cl-mapcar #'cons
 		    (let ((month 12)
 			  (result nil))
 		      (while (>= month 1)
 			(push (format-time-string "%B" 
-						  (date-to-time (format "1970-%d-05 00:01 EST" month))) 
+						  (date-to-time
+						   (format "1970-%d-05 00:01 EST" month))) 
 			      result)
 			(setf month (1- month)))
 		      result)
 		    (let ((this-month (string-to-number (format-time-string "%m"))))
-		      (append (make-list this-month thisyear) (make-list (- 12 9) (1+ thisyear))))))))
+		      (append (make-list this-month thisyear)
+			      (make-list (- 12 9) (1+ thisyear))))))))
 
 ;; '(String Char) -> Number 
 (defun routines-count-char-at-beginning (strng chr)
-	"Takes a string strng and a charakter char and returns the count of chr at the beginnng of strng"
+  "Takes a string strng and a charakter char and returns
+the count of chr at the beginnng of strng"
   (let ((result 0)
 	(tmpstrng strng))
-    (while (= (string-to-char tmpstrng) 42)
+    (while (= (string-to-char tmpstrng) chr)
 	  (setf tmpstrng (substring tmpstrng  1 (length tmpstrng)))
 	  (setf result (1+ result)))
     result))
 
 ;; String -> String
+;; Bad solution, I am working on a new one. See below.
 (defun routines-remove-n-stars-from-line (strng n)
+  ;; Removes n 
   (let ((starstring "")
 	(i 0))
     (while (< i n)
@@ -98,7 +127,14 @@
     (setf starstring (concat "^" starstring))
     (replace-regexp-in-string starstring "" strng)))
 
-(routines-count-char-at-beginning "*** Wurst\n**** Brot" 42)
+;; This is meant to replace routines-remove-n-stars-from-line.
+(defun routines-remove-n-times-char-from-line (strng n char)
+  (let* ((c (concat  
+    (if (member char routines-rexexp-special-characters)
+	"\\" "") (format "%c" char)))
+	 (regexp-string
+	  (concat "^" c "\\{" (format "%i" n) "\\}")))
+    (replace-regexp-in-string regexp-string "" strng)))
 
 ;; -> String
 (defun build-todays-search-list ()
@@ -150,7 +186,7 @@
 	 (cl-mapcar #'concat
 		  ;; Creates a list of " *^n" strings, while n is in
 		  ;; {1 ...(length ls)}
-		  (mapcar #'(lambda (n) (concat (make-string n 42) " "))
+		  (mapcar #'(lambda (n) (concat (make-string n starchar) " "))
 			  (list-from-to 1 (length sl)))
 		  sl))
 	(everything-found nil))
@@ -176,7 +212,7 @@
 		(increment-number-at-point))
 	    (goto-char search-root))
 	    (message (concat (cl-reduce #'(lambda (item1 item2) 
-				       (concat item1 "->" item2)) 
+					    (concat item1 "->" item2)) 
 				     sl) 
 			     " not found.")))
       (goto-char search-root)
@@ -185,28 +221,32 @@
 
 ;; -> String
 (defun routines-build-todays-stringlist ()
-  (list (cons '("GTD-Baskets" "Business-Days") nil)
-	(cons `("GTD-Baskets" "WeekDays" ,(routines-weekday)) nil)
-	(cons `("GTD-Baskets" "DayMonth" ,(routines-monthday)) nil)
-	(cons `("GTD-Baskets" "WeekOfTheYear" ,(routines-kwyear)) 't)
-	(cons `("GTD-Baskets" ,(routines-month)) 't)))
+  (list
+;   (cons (list gtd-container-root-string gtd-business-day-string) nil)
+   (cons (list gtd-container-root-string gtd-weekyear-string (routines-weekday)) nil)
+   (cons (list gtd-container-root-string gtd-daymonth-string (routines-monthday)) nil)
+   (cons (list gtd-container-root-string gtd-weekyear-string (routines-kwyear)) 't)
+   (cons (list gtd-container-root-string (routines-month)) t)))
 
 ;; 
-(defun routines-insert-today-as-new () 
+(defun routines-insert-today-as-new-bg () 
   (interactive)
-  (let ((point-position (point)))
+  (let* ((point-position (point))
+	 (today-stringlist (routines-build-todays-stringlist)))
     (insert "* Today\n")
     (mapcar #'(lambda (strng) 
 		(if strng
 		    (progn
-		      (setf strng (routines-remove-n-stars-from-line 
+		      (setf strng (routines-remove-n-times-char-from-line 
 				    strng
-				    (- (routines-count-char-at-beginning strng 42) 2)))
+				    (- (routines-count-char-at-beginning strng starchar)
+				       2)
+				    starchar))
 		      (insert strng)
 		      (insert "\n"))))
 	    (mapcar #'(lambda (item) (routines-get-outline-subtree-by-stringlist 
-				      (car item) 
+				      (car item)
 				      (cdr item)))
-		    (routines-build-todays-stringlist)))
+		    today-stringlist))
     (goto-char point-position)
   (hide-subtree)))
