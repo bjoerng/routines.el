@@ -46,68 +46,10 @@
 (defconst gtd-weekyear-string "WeekOfTheYear")
 ;;----------------------------------------------------------------------
 
-;; This is a mess!
-(defun routines-insert-skeleton ()
-  (interactive)
-  (insert "* GTD-Baskets\n")
-  (insert "** Business-Days\n")
-  (insert "** WeekDays\n")
-  ;; The following solutions is a workaround, until i find out how to
-  ;; insert the days in a week in a smarter way.
-  (insert (concat "*** "
-		  (format-time-string "%A" (date-to-time "Tue, 05-Jan-70 00:00:1 EST" )) "\n"))
-  (insert (concat "*** "
-		  (format-time-string "%A" (date-to-time "Tue, 06-Jan-70 00:00:1 EST")) "\n"))
-  (insert (concat "*** "
-		  (format-time-string "%A" (date-to-time "Tue, 07-Jan-70 00:00:1 EST"))) "\n")
-  (insert (concat "*** "
-		  (format-time-string "%A" (date-to-time "Tue, 08-Jan-70 00:00:1 EST")) "\n"))
-  (insert (concat "*** "
-		  (format-time-string "%A" (date-to-time "Tue, 09-Jan-70 00:00:1 EST")) "\n"))
-  (insert (concat "*** "
-		  (format-time-string "%A" (date-to-time "Tue, 10-Jan-70 00:00:1 EST")) "\n"))
-  (insert (concat "*** "
-		  (format-time-string "%A" (date-to-time "Tue, 11-Jan-70 00:00:1 EST")) "\n"))
-  ;; Now the Days in Month are inserted 
-  (insert "** DayMonth\n")
-  (let ((dm 1))
-    (while (<= dm 31)
-      (insert (concat "*** md" (number-to-string dm) "\n"))
-      (setf dm (1+ dm))))
-  ;; Now the weeks in a years are inserted, by determining the actual
-  ;; year, and the actual week. As long as tmpweek ist lower or equal
-  ;; than thisweek, the next year will be inserted. When the tmpweek
-  ;; ist greater than thisweek, the actual year will be inserted.
-  (insert "** WeekOfTheYear\n")
-  (let ((thisyear (string-to-number (format-time-string "%Y"))))
-    (let ((thisweek (string-to-number (format-time-string "%V")))
-	  (tmpweek 1))
-      (while (<= tmpweek 52)
-	(if (< tmpweek thisweek) 
-	    (insert (format  "*** WotY%02d %d\n" tmpweek thisyear))
-	  (insert (format  "*** WotY%02d %d\n" tmpweek (1+ thisyear))))
-      (setf tmpweek (1+ tmpweek))))
-    ;; Now The Month are inserted analog to the weeks.
-    (mapc #'
-     (lambda (item) (insert (concat "** "(car item) " " (number-to-string (cdr item)) "\n")))
-	 (cl-mapcar #'cons
-		    (let ((month 12)
-			  (result nil))
-		      (while (>= month 1)
-			(push (format-time-string "%B" 
-						  (date-to-time
-						   (format "1970-%d-05 00:01 EST" month))) 
-			      result)
-			(setf month (1- month)))
-		      result)
-		    (let ((this-month (string-to-number (format-time-string "%m"))))
-		      (append (make-list this-month thisyear)
-			      (make-list (- 12 9) (1+ thisyear))))))))
-
 ;; '(String Char) -> Number 
 (defun routines-count-char-at-beginning (strng chr)
-  "Takes a string strng and a charakter char and returns
-the count of chr at the beginnng of strng"
+  "Takes a string strng and a charakter char and returns the
+  count of chr at the beginnng of strng"
   (let ((result 0)
 	(tmpstrng strng))
     (while (= (string-to-char tmpstrng) chr)
@@ -116,19 +58,10 @@ the count of chr at the beginnng of strng"
     result))
 
 ;; String -> String
-;; Bad solution, I am working on a new one. See below.
-(defun routines-remove-n-stars-from-line (strng n)
-  ;; Removes n 
-  (let ((starstring "")
-	(i 0))
-    (while (< i n)
-      (setf starstring (concat "\\*" starstring))
-      (setf i (1+ i)))
-    (setf starstring (concat "^" starstring))
-    (replace-regexp-in-string starstring "" strng)))
-
-;; This is meant to replace routines-remove-n-stars-from-line.
 (defun routines-remove-n-times-char-from-line (strng n char)
+  "Removes n times char from the beginning from strng. If char
+  does not occur n or more times at the beginning it evaluaties
+  to strng."
   (let* ((c (concat  
     (if (member char routines-rexexp-special-characters)
 	"\\" "") (format "%c" char)))
@@ -149,7 +82,10 @@ the count of chr at the beginnng of strng"
 		("DayMonth" ,(routines-monthday))
 		("WeekOfTheYear" ,(routines-kwyear))
 		(,(routines-month)))))))
-		
+
+;; If there is a number at point, the number will be incremented. If
+;; the is no number at point, the error "No number at point" will be
+;; thrown.
 (defun increment-number-at-point ()
       (interactive)
       (skip-chars-backward "0123456789")
@@ -170,6 +106,7 @@ the count of chr at the beginnng of strng"
 
 ;;-> String
 (defun routines-outline-subtree-to-string ()
+  "Returns the outline subtree rooted at point as a string."
   (let ((beg (point))
 	(end (point)))
 	(save-excursion
@@ -181,14 +118,15 @@ the count of chr at the beginnng of strng"
 
 ;; (Strings) --> Boolean
 (defun routines-find-outline-subtree-by-stringlist (sl)
-  "Moves the cursor the Outline-Subtree given by the string list sl"
+  "Moves the cursor to the outline subtree given by the string list sl"
   (let ((search-list 
 	 (cl-mapcar #'concat
 		  ;; Creates a list of " *^n" strings, while n is in
-		  ;; {1 ...(length ls)}
-		  (mapcar #'(lambda (n) (concat (make-string n starchar) " "))
-			  (list-from-to 1 (length sl)))
-		  sl))
+		  ;; {1 ...(length sl)}
+		    (mapcar
+		     #'(lambda (n) (concat (make-string n starchar) " "))
+		     (list-from-to 1 (length sl)))
+		    sl))
 	(everything-found nil))
     (mapc #'(lambda (string) 
 	       (progn
@@ -199,7 +137,8 @@ the count of chr at the beginnng of strng"
 
 ;; '(String Boolean) -> String
 (defun routines-get-outline-subtree-by-stringlist (sl increment)
-  ;; It increment is not nil, the number at the end of the header will be incremented
+  "It increment is not nil, the number at the end of the header will
+  be incremented."
   (save-excursion
     (let ((search-root nil)
 	  (result nil))
@@ -221,15 +160,18 @@ the count of chr at the beginnng of strng"
 
 ;; -> String
 (defun routines-build-todays-stringlist ()
+  "Builds the string list for today to get the right outline-trees."
   (list
-;   (cons (list gtd-container-root-string gtd-business-day-string) nil)
-   (cons (list gtd-container-root-string gtd-weekyear-string (routines-weekday)) nil)
+   (cons (list gtd-container-root-string gtd-business-day-string) nil)
+   (cons (list gtd-container-root-string gtd-weekday-string (routines-weekday)) nil)
    (cons (list gtd-container-root-string gtd-daymonth-string (routines-monthday)) nil)
    (cons (list gtd-container-root-string gtd-weekyear-string (routines-kwyear)) 't)
    (cons (list gtd-container-root-string (routines-month)) t)))
 
 ;; 
-(defun routines-insert-today-as-new-bg () 
+(defun routines-insert-today-as-new-bg ()
+  "Creates a string of today TODO items as an outline tree and
+  inserts them at point and hides the subtree."
   (interactive)
   (let* ((point-position (point))
 	 (today-stringlist (routines-build-todays-stringlist)))
