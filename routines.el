@@ -44,7 +44,15 @@
 (defconst gtd-weekday-string "WeekDays")
 (defconst gtd-daymonth-string "DayMonth")
 (defconst gtd-weekyear-string "WeekOfTheYear")
+(defconst gtd-nonrecurring-string "Nonrecurring")
 ;;----------------------------------------------------------------------
+;; Small functions
+(defun routines-weekday () (format-time-string "%A"))
+(defun routines-monthday () (format-time-string "md%d"))
+(defun routines-monthyear () (format-time-string "%B %Y"))
+(defun routines-kwyear () (format-time-string "WotY%V %Y"))
+(defun routines-month  () (format-time-string "%B %Y"))
+(defun routines-date () (format-time-string "%Y-%m-%d"))
 
 ;; '(String Char) -> Number 
 (defun routines-count-char-at-beginning (strng chr)
@@ -66,11 +74,12 @@
     (if (member char routines-rexexp-special-characters)
 	"\\" "") (format "%c" char)))
 	 (regexp-string
-	  (concat "^" c "\\{" (format "%i" n) "\\}")))
+	  (concat "^" c "\\{" (format "%i" n) "\\}"))) ;;endLet
     (replace-regexp-in-string regexp-string "" strng)))
 
 ;; -> String
 (defun build-todays-search-list ()
+  "Creates today search list, depending on the day it is executed"
   (cl-labels ((cons-business-days (sl) 
 				  (if (business-day-p) 
 				      (cons '("GTD-Baskets" "Business-Days") sl)
@@ -83,10 +92,10 @@
 		("WeekOfTheYear" ,(routines-kwyear))
 		(,(routines-month)))))))
 
-;; If there is a number at point, the number will be incremented. If
-;; the is no number at point, the error "No number at point" will be
-;; thrown.
 (defun increment-number-at-point ()
+  "If there is a number at point, the number will be incremented.
+If the is no number at point, the error \"No number at point\"
+will be thrown."
       (interactive)
       (skip-chars-backward "0123456789")
       (or (looking-at "[0123456789]+")
@@ -105,16 +114,20 @@
 ;; Saturday or Sonday
 
 ;;-> String
-(defun routines-outline-subtree-to-string ()
-  "Returns the outline subtree rooted at point as a string."
+(defun routines-outline-subtree-to-string (&optional delete-subtree-p)
+  "Returns the outline subtree rooted at point as a string. If delete-subtree-p is not nil, the subtree will be removed befor it is returned."
   (let ((beg (point))
-	(end (point)))
+	(end (point))
+	(return-string nil))
 	(save-excursion
 	  (beginning-of-line)
 	  (setq beg (point))
 	  (outline-end-of-subtree)
 	  (setq end (point))
-	  (buffer-substring beg end))))
+	  (setq return-string (buffer-substring beg end))
+	  (if delete-subtree-p
+	      (delete-region beg end))
+	  return-string)))
 
 ;; (Strings) --> Boolean
 (defun routines-find-outline-subtree-by-stringlist (sl)
@@ -136,9 +149,10 @@
     (cl-every '(lambda (x) x) everything-found)))
 
 ;; '(String Boolean) -> String
-(defun routines-get-outline-subtree-by-stringlist (sl increment)
-  "It increment is not nil, the number at the end of the header will
-  be incremented."
+(defun routines-get-outline-subtree-by-stringlist
+    (sl &optional increment delete-subtree-p)
+  "It increment is not nil, the number at the end of the header
+  will be incremented."
   (save-excursion
     (let ((search-root nil)
 	  (result nil))
@@ -146,49 +160,73 @@
       (setf search-root (point))
       (if (routines-find-outline-subtree-by-stringlist (cdr sl))
 	  (progn 
-	    (setf result (routines-outline-subtree-to-string))
+	    (setf result (routines-outline-subtree-to-string delete-subtree-p))
 	    (if increment
 		(increment-number-at-point))
 	    (goto-char search-root))
-	    (message (concat (cl-reduce #'(lambda (item1 item2) 
-					    (concat item1 "->" item2)) 
-				     sl) 
-			     " not found.")))
+	    (message-tree-not-found sl)
       (goto-char search-root)
-      (hide-subtree)
-	    result)))
+      (hide-subtree) result))))
 
+(defun message-tree-not-found (string-list)
+  (message (concat
+	    (cl-reduce #'(lambda (item1 item2)
+			   (concat item1 "->" item2)) 
+		       string-list) " not found.")))
+
+
+(message-tree-not-found '("1" "2" "3" "4" "5"))
+    
 ;; -> String
 (defun routines-build-todays-stringlist ()
   "Builds the string list for today to get the right outline-trees."
   (list
    (cons (list gtd-container-root-string gtd-business-day-string) nil)
-   (cons (list gtd-container-root-string gtd-weekday-string (routines-weekday)) nil)
-   (cons (list gtd-container-root-string gtd-daymonth-string (routines-monthday)) nil)
-   (cons (list gtd-container-root-string gtd-weekyear-string (routines-kwyear)) 't)
+   (cons (list gtd-container-root-string gtd-weekday-string
+	       (routines-weekday))
+	 nil)
+   (cons (list gtd-container-root-string gtd-daymonth-string
+	       (routines-monthday))
+	 nil)
+   (cons (list gtd-container-root-string gtd-weekyear-string
+	       (routines-kwyear))
+	 't)
    (cons (list gtd-container-root-string (routines-month)) t)))
 
-;; 
+(defun build-today-to-from-today-stringlist (today-stringlist)
+  (mapcar #'(lambda (item)
+	      (routines-get-outline-subtree-by-stringlist 
+	       (car item)
+	       (cdr item)))
+	  today-stringlist))
+
+(defun insert-todo-with-proper-starcount (todo)
+  (progn
+    (setf strng
+	  (routines-remove-n-times-char-from-line strng
+	   (- (routines-count-char-at-beginning
+	       strng starchar) 2) starchar))
+    (insert strng)
+    (insert "\n")))
+
+(defun insert-today-todos-with-proper-starcount (todo-list)
+  (mapcar
+     #'(lambda (strng) 
+	 (if strng
+	     (insert-todo-with-proper-starcount string))
+     todo-list)))
+  
+
 (defun routines-insert-today-as-new-bg ()
   "Creates a string of today TODO items as an outline tree and
   inserts them at point and hides the subtree."
   (interactive)
   (let* ((point-position (point))
-	 (today-stringlist (routines-build-todays-stringlist)))
+	 (today-stringlist (routines-build-todays-stringlist))
+	 (today-todo-list (build-today-to-from-today-stringlist
+			   today-stringlist))
+	  ) ;endLet
     (insert "* Today\n")
-    (mapcar #'(lambda (strng) 
-		(if strng
-		    (progn
-		      (setf strng (routines-remove-n-times-char-from-line 
-				    strng
-				    (- (routines-count-char-at-beginning strng starchar)
-				       2)
-				    starchar))
-		      (insert strng)
-		      (insert "\n"))))
-	    (mapcar #'(lambda (item) (routines-get-outline-subtree-by-stringlist 
-				      (car item)
-				      (cdr item)))
-		    today-stringlist))
+    (insert-today-todos-with-proper-starcount today-todo-list)
     (goto-char point-position)
-  (hide-subtree)))
+    (hide-subtree)))
