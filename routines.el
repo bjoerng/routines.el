@@ -65,6 +65,7 @@
 		  result)))))
 
 (defun routines-insert-weekday-skeleton ()
+  "Inserts the weekday skeleton in the right language."
   (insert (concat "** " gtd-weekday-string "\n"))
   (mapcar #'(lambda (string)
 	      (insert (concat "*** " string "\n"))) (list-of-weekdays)))
@@ -74,17 +75,36 @@
     (let (value)
       (dotimes (i 31 value)
 	(insert (concat "*** "
-			(format-time-string gtd-monthday-format
-					    (encode-time 0 0 0 (1+ i) 1 1970))
+			(format-time-string gtd-weak-of-the-year-string
+					    (encode-time 0 0 0 8 1 1970))
 			"\n")))))
 
+
+(nth 5 (decode-time))
+
 (defun routines-insert-kwyear-skeleton ()
-  (let (value)
+  (cl-labels
+      ((year-now () (nth 5 (decode-time)))
+       (encode-time-with-week-and-year (week year)
+			      (encode-time 0 0 0
+					   (+ 1 (* week 7))
+					   1
+					   year))
+       (insert-kw-with-year
+	(week)
+	(message
+	 (concat "*** "
+		 (format-time-string
+		  gtd-weak-of-the-year-string
+		  (encode-time-with-week-and-year week
+						  (+ (year-now)
+						     (if (time-less-p
+							 (encode-time-with-week-and-year) (current-time)) 1 0)))
+		  "\n")))))
+    (let (value)
       (dotimes (i 52 value)
-	(insert (concat "*** "
-			(format-time-string gtd-monthday-format
-					    (encode-time 0 0 0 (+ 1 (* i 7)) 1 1970))
-			"\n")))))
+	(insert-kw-with-year i)
+	))))
 
 (defun routines-create-skeleton ()
   "Create a scelet for routines"
@@ -94,8 +114,6 @@
     (insert (concat "** " gtd-business-day-string "\n"))
     (routines-insert-weekday-skeleton)
     (routines-insert-daymonth-skeleton)
-    
-    (insert (concat "** " 
     ))
     
 
