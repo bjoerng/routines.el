@@ -58,7 +58,6 @@
 (defun routines-month  () (format-time-string "%B %Y"))
 (defun routines-date () (format-time-string "%Y-%m-%d"))
 
-
 (defun list-of-weekdays ()
   "Returns a list of weekdays in the right language."
   (let (result)
@@ -67,20 +66,38 @@
 	    (cons (format-time-string "%A" (encode-time 0 0 0 1 1 1970))
 		  result)))))
 
+(defun routines-insert-weekday-skeleton ()
+  (insert (concat "** " gtd-weekday-string "\n"))
+  (mapcar #'(lambda (string)
+	      (insert (concat "*** " string "\n"))) (list-of-weekdays)))
+
+(defun routines-insert-daymonth-skeleton ()
+  (insert (concat "** " gtd-daymonth-string) "\n")
+    (let (value)
+      (dotimes (i 31 value)
+	(insert (concat "*** "
+			(format-time-string gtd-monthday-format
+					    (encode-time 0 0 0 (1+ i) 1 1970))
+			"\n")))))
+
+(defun routines-insert-kwyear-skeleton ()
+  (let (value)
+      (dotimes (i 52 value)
+	(insert (concat "*** "
+			(format-time-string gtd-monthday-format
+					    (encode-time 0 0 0 (+ 1 (* i 7)) 1 1970))
+			"\n")))))
+
 (defun routines-create-skeleton ()
   "Create a scelet for routines"
   (interactive)
   (progn
     (insert (concat "* " gtd-container-root-string "\n"))
     (insert (concat "** " gtd-business-day-string "\n"))
-    (insert (concat "** " gtd-weekday-string "\n"))
-    (mapcar #'(lambda (string)
-		(insert (concat "*** " string "\n"))) (list-of-weekdays))
-    (insert (concat "** " gtd-daymonth-string) "\n")
-    (let (value)
-      (dotimes (i 31 value)
-	(insert (concat "*** " (format-time-string gtd-monthday-format
-						   (encode-time 0 0 0 i 1 1970))))))
+    (routines-insert-weekday-skeleton)
+    (routines-insert-daymonth-skeleton)
+    
+    (insert (concat "** " 
     ))
     
 
@@ -246,7 +263,6 @@ will be thrown."
 	     (insert-todo-with-proper-starcount string))
      todo-list)))
   
-
 (defun routines-insert-today-as-new-bg ()
   "Creates a string of today TODO items as an outline tree and
   inserts them at point and hides the subtree."
