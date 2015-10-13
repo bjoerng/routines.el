@@ -56,6 +56,7 @@
 (defun routines-month  () (format-time-string "%B %Y"))
 (defun routines-date () (format-time-string "%Y-%m-%d"))
 
+
 (defun list-of-weekdays ()
   "Returns a list of weekdays in the right language."
   (let (result)
@@ -99,7 +100,7 @@
 		  (encode-time-with-week-and-year week
 						  (+ (year-now)
 						     (if (time-less-p
-							 (encode-time-with-week-and-year) (current-time)) 1 0)))
+							 (encode-time-with-week-and-year week (year-now)) (current-time)) 1 0)))
 		  "\n")))))
     (let (value)
       (dotimes (i 52 value)
@@ -107,7 +108,7 @@
 	))))
 
 (defun routines-create-skeleton ()
-  "Create a scelet for routines"
+  "Create a skeleton for routines"
   (interactive)
   (progn
     (insert (concat "* " gtd-container-root-string "\n"))
