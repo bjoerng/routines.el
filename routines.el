@@ -22,8 +22,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; TODO:
-;;; - Function which builds the List of Stringlist, to build the String for 
-;;;   today (DONE, needs testing)
 ;;; - Function which determines if there is a routline-tree for today
 ;;; - Function to insert new Today in an existing tree
 ;;; - Function which builds a Skeleton-Tree
