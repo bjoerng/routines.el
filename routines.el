@@ -45,14 +45,38 @@
 (defconst gtd-daymonth-string "DayMonth")
 (defconst gtd-weekyear-string "WeekOfTheYear")
 (defconst gtd-nonrecurring-string "Nonrecurring")
+(defconst gtd-weekday-format "%A")
+(defconst gtd-monthday-format "md%d")
+(defconst gtd-month-year-string "%B %Y")
+(defconst gtd-weak-of-the-year-string "WotY%V %Y")
 ;;----------------------------------------------------------------------
 ;; Small functions
-(defun routines-weekday () (format-time-string "%A"))
-(defun routines-monthday () (format-time-string "md%d"))
-(defun routines-monthyear () (format-time-string "%B %Y"))
-(defun routines-kwyear () (format-time-string "WotY%V %Y"))
+(defun routines-weekday () (format-time-string gtd-weekday-format))
+(defun routines-monthday () (format-time-string gtd-monthday-format))
+(defun routines-monthyear () (format-time-string gtd-month-year-string))
+(defun routines-kwyear () (format-time-string gtd-weak-of-the-year-string))
 (defun routines-month  () (format-time-string "%B %Y"))
 (defun routines-date () (format-time-string "%Y-%m-%d"))
+
+
+(defun routines-create-skeleton ()
+  "Create a scelet for routines"
+  (interactive)
+  (progn
+    (insert (concat "* " gtd-container-root-string))
+    (insert (concat "** " gtd-business-day-string))
+    (insert (concat "** " gtd-weekday-string))
+    (let ((i 0))
+      (while (< i 7)
+	(insert
+	 (concat "*** " (format-time-string "%A" (encode-time 0 0 0 (+ 5 i) 1 1970)) "\n"))
+	(setq i (1+ i))))
+    (insert (concat "** "  gtd-daymonth-string))
+    (let ((i 1))
+      (while (<= i 31)
+	(in
+    ))
+    
 
 ;; '(String Char) -> Number 
 (defun routines-count-char-at-beginning (strng chr)
