@@ -59,22 +59,28 @@
 (defun routines-date () (format-time-string "%Y-%m-%d"))
 
 
+(defun list-of-weekdays ()
+  "Returns a list of weekdays in the right language."
+  (let (result)
+    (dotimes (i 7 result)
+      (setq result
+	    (cons (format-time-string "%A" (encode-time 0 0 0 1 1 1970))
+		  result)))))
+
 (defun routines-create-skeleton ()
   "Create a scelet for routines"
   (interactive)
   (progn
-    (insert (concat "* " gtd-container-root-string))
-    (insert (concat "** " gtd-business-day-string))
-    (insert (concat "** " gtd-weekday-string))
-    (let ((i 0))
-      (while (< i 7)
-	(insert
-	 (concat "*** " (format-time-string "%A" (encode-time 0 0 0 (+ 5 i) 1 1970)) "\n"))
-	(setq i (1+ i))))
-    (insert (concat "** "  gtd-daymonth-string))
-    (let ((i 1))
-      (while (<= i 31)
-	(in
+    (insert (concat "* " gtd-container-root-string "\n"))
+    (insert (concat "** " gtd-business-day-string "\n"))
+    (insert (concat "** " gtd-weekday-string "\n"))
+    (mapcar #'(lambda (string)
+		(insert (concat "*** " string "\n"))) (list-of-weekdays))
+    (insert (concat "** " gtd-daymonth-string) "\n")
+    (let (value)
+      (dotimes (i 31 value)
+	(insert (concat "*** " (format-time-string gtd-monthday-format
+						   (encode-time 0 0 0 i 1 1970))))))
     ))
     
 
