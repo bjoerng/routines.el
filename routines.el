@@ -55,14 +55,14 @@
 (defun routines-kwyear () (format-time-string gtd-weak-of-the-year-string))
 (defun routines-month  () (format-time-string "%B %Y"))
 (defun routines-date () (format-time-string "%Y-%m-%d"))
-
+(defun year-now () (nth 5 (decode-time)))
 
 (defun list-of-weekdays ()
   "Returns a list of weekdays in the right language."
   (let (result)
     (dotimes (i 7 result)
       (setq result
-	    (cons (format-time-string "%A" (encode-time 0 0 0 1 1 1970))
+	    (cons (format-time-string "%A" (encode-time 0 0 0 (- 4 i)1 1970))
 		  result)))))
 
 (defun routines-insert-weekday-skeleton ()
@@ -72,40 +72,33 @@
 	      (insert (concat "*** " string "\n"))) (list-of-weekdays)))
 
 (defun routines-insert-daymonth-skeleton ()
-  (insert (concat "** " gtd-daymonth-string) "\n")
+  (insert (concat "** " gtd-daymonth-string "\n"))
     (let (value)
       (dotimes (i 31 value)
 	(insert (concat "*** "
-			(format-time-string gtd-weak-of-the-year-string
-					    (encode-time 0 0 0 8 1 1970))
+			(format-time-string gtd-monthday-format
+					    (encode-time 0 0 0 (1+ i) 1 1970))
 			"\n")))))
 
+(defun encode-time-with-week-and-year (week year)
+  (encode-time 0 0 0 (+ 4 (* week 7)) 1 year))
 
-(nth 5 (decode-time))
+(defun insert-kw-with-year (week)
+  (insert (concat "*** "
+		  (format-time-string
+		   gtd-weak-of-the-year-string
+		   (encode-time-with-week-and-year week
+						   (+ (year-now)
+						      (if (time-less-p
+							   (encode-time-with-week-and-year week (year-now)) (current-time)) 1 0))))
+		  "\n")))
 
 (defun routines-insert-kwyear-skeleton ()
-  (cl-labels
-      ((year-now () (nth 5 (decode-time)))
-       (encode-time-with-week-and-year (week year)
-			      (encode-time 0 0 0
-					   (+ 1 (* week 7))
-					   1
-					   year))
-       (insert-kw-with-year
-	(week)
-	(message
-	 (concat "*** "
-		 (format-time-string
-		  gtd-weak-of-the-year-string
-		  (encode-time-with-week-and-year week
-						  (+ (year-now)
-						     (if (time-less-p
-							 (encode-time-with-week-and-year week (year-now)) (current-time)) 1 0)))
-		  "\n")))))
+  (insert (concat "** " gtd-weekyear-string "\n"))
     (let (value)
       (dotimes (i 52 value)
 	(insert-kw-with-year i)
-	))))
+	)))
 
 (defun routines-create-skeleton ()
   "Create a skeleton for routines"
@@ -115,6 +108,7 @@
     (insert (concat "** " gtd-business-day-string "\n"))
     (routines-insert-weekday-skeleton)
     (routines-insert-daymonth-skeleton)
+    (routines-insert-kwyear-skeleton)
     ))
     
 
