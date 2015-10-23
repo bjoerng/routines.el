@@ -24,7 +24,7 @@
 ;;; TODO:
 ;;; - Function which determines if there is a routline-tree for today
 ;;; - Function to insert new Today in an existing tree
-;;; - Function which builds a Skeleton-Tree
+;;; - Function which builds a Skeleton-Tree, DONE, needs testing
 ;;; - Function to prepare GTD-tree for a new year
 ;;; Commentary:
 ;;
@@ -72,6 +72,7 @@
 	      (insert (concat "*** " string "\n"))) (list-of-weekdays)))
 
 (defun routines-insert-daymonth-skeleton ()
+  "Insert the skeleton for the days of a month."
   (insert (concat "** " gtd-daymonth-string "\n"))
     (let (value)
       (dotimes (i 31 value)
@@ -81,24 +82,49 @@
 			"\n")))))
 
 (defun encode-time-with-week-and-year (week year)
+  "Takes a week a year an returns an the encoded time".
   (encode-time 0 0 0 (+ 4 (* week 7)) 1 year))
 
 (defun insert-kw-with-year (week)
+  "Insert a week with year, with the prexis '*** '. If the week
+is less thean the current week, it inserts the week with a string
+representing the next year."
   (insert (concat "*** "
 		  (format-time-string
 		   gtd-weak-of-the-year-string
-		   (encode-time-with-week-and-year week
-						   (+ (year-now)
-						      (if (time-less-p
-							   (encode-time-with-week-and-year week (year-now)) (current-time)) 1 0))))
+		   (encode-time-with-week-and-year
+		    week
+		    (+ (year-now)
+		       (if (time-less-p
+			    (encode-time-with-week-and-year week (year-now))
+			    (current-time))
+			   1 0))))
 		  "\n")))
 
 (defun routines-insert-kwyear-skeleton ()
+  "Inserts a skeleton for the task to do in the different weeks of a year" 
   (insert (concat "** " gtd-weekyear-string "\n"))
     (let (value)
       (dotimes (i 52 value)
 	(insert-kw-with-year i)
 	)))
+
+
+(defun routines-insert-month-skeleton ()
+  "Inserts a skeleton for the different month of a year."
+  (let (value)
+    (dotimes (i 12 value)
+      (insert (concat "** " (format-time-string
+			     gtd-month-year-string
+			     (if (time-less-p
+				  (current-time)
+				  (encode-time 0 0 0 1 (1+ i) (year-now)))
+				 (encode-time 0 0 0 1 (1+ i) (year-now))
+			       (encode-time 0 0 0 1 (1+ i) (1+ (year-now)))))
+		      "\n")))))
+						
+					  
+
 
 (defun routines-create-skeleton ()
   "Create a skeleton for routines"
@@ -109,9 +135,9 @@
     (routines-insert-weekday-skeleton)
     (routines-insert-daymonth-skeleton)
     (routines-insert-kwyear-skeleton)
+    (routines-insert-month-skeleton)
     ))
     
-
 ;; '(String Char) -> Number 
 (defun routines-count-char-at-beginning (strng chr)
   "Takes a string strng and a charakter char and returns the
@@ -231,9 +257,6 @@ will be thrown."
 	    (cl-reduce #'(lambda (item1 item2)
 			   (concat item1 "->" item2)) 
 		       string-list) " not found.")))
-
-
-(message-tree-not-found '("1" "2" "3" "4" "5"))
     
 ;; -> String
 (defun routines-build-todays-stringlist ()
