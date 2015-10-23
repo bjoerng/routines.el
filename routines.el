@@ -109,7 +109,6 @@ representing the next year."
 	(insert-kw-with-year i)
 	)))
 
-
 (defun routines-insert-month-skeleton ()
   "Inserts a skeleton for the different month of a year."
   (let (value)
@@ -123,9 +122,6 @@ representing the next year."
 			       (encode-time 0 0 0 1 (1+ i) (1+ (year-now)))))
 		      "\n")))))
 						
-					  
-
-
 (defun routines-create-skeleton ()
   "Create a skeleton for routines"
   (interactive)
@@ -235,8 +231,9 @@ will be thrown."
 ;; '(String Boolean) -> String
 (defun routines-get-outline-subtree-by-stringlist
     (sl &optional increment delete-subtree-p)
-  "It increment is not nil, the number at the end of the header
-  will be incremented."
+  "Takes a stringlist sl and returns the subtree of the suntree
+  in sl. If increment is not nil, the number at the end of the
+  header will be incremented."
   (save-excursion
     (let ((search-root nil)
 	  (result nil))
@@ -253,6 +250,8 @@ will be thrown."
       (hide-subtree) result))))
 
 (defun message-tree-not-found (string-list)
+  "Dsiplays a message thatt the string representation in
+sringlist does not lead to a subtree."
   (message (concat
 	    (cl-reduce #'(lambda (item1 item2)
 			   (concat item1 "->" item2)) 
@@ -274,7 +273,9 @@ will be thrown."
 	 't)
    (cons (list gtd-container-root-string (routines-month)) t)))
 
-(defun build-today-to-from-today-stringlist (today-stringlist)
+(defun build-today-todo-from-today-stringlist (today-stringlist)
+  "Take a list of stringlists and return the subtree of the
+knot-sequence in the stringlist."
   (mapcar #'(lambda (item)
 	      (routines-get-outline-subtree-by-stringlist 
 	       (car item)
@@ -282,6 +283,7 @@ will be thrown."
 	  today-stringlist))
 
 (defun insert-todo-with-proper-starcount (todo)
+  "Insert a single todo ith right starcount."
   (progn
     (setf strng
 	  (routines-remove-n-times-char-from-line strng
@@ -291,6 +293,8 @@ will be thrown."
     (insert "\n")))
 
 (defun insert-today-todos-with-proper-starcount (todo-list)
+  "Inserts todos wit hthe right amount of tacound to fit into the
+today-tree."
   (mapcar
      #'(lambda (strng) 
 	 (if strng
@@ -303,7 +307,7 @@ will be thrown."
   (interactive)
   (let* ((point-position (point))
 	 (today-stringlist (routines-build-todays-stringlist))
-	 (today-todo-list (build-today-to-from-today-stringlist
+	 (today-todo-list (build-today-todo-from-today-stringlist
 			   today-stringlist))
 	  ) ;endLet
     (insert "* Today\n")
