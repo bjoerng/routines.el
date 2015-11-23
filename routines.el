@@ -68,8 +68,8 @@
 (defun routines-insert-weekday-skeleton ()
   "Inserts the weekday skeleton in the right language."
   (insert (concat "** " gtd-weekday-string "\n"))
-  (mapcar #'(lambda (string)
-	      (insert (concat "*** " string "\n"))) (list-of-weekdays)))
+  (mapcar #'(lambda (strng)
+	      (insert (concat "*** " strng "\n"))) (list-of-weekdays)))
 
 (defun routines-insert-daymonth-skeleton ()
   "Insert the skeleton for the days of a month."
@@ -221,9 +221,9 @@ will be thrown."
 		     (list-from-to 1 (length sl)))
 		    sl))
 	(everything-found nil))
-    (mapc #'(lambda (string) 
+    (mapc #'(lambda (strng) 
 	       (progn
-		 (push (search-forward string nil 't) everything-found)
+		 (push (search-forward strng nil 't) everything-found)
 		 (show-subtree)))
 	    search-list)
     (cl-every '(lambda (x) x) everything-found)))
@@ -244,10 +244,10 @@ will be thrown."
 	    (setf result (routines-outline-subtree-to-string delete-subtree-p))
 	    (if increment
 		(increment-number-at-point))
-	    (goto-char search-root))
-	    (message-tree-not-found sl)
+	    (goto-char search-root)))
+      (message-tree-not-found sl)
       (goto-char search-root)
-      (hide-subtree) result))))
+      (hide-subtree) result)))
 
 (defun message-tree-not-found (string-list)
   "Dsiplays a message thatt the string representation in
@@ -289,16 +289,16 @@ knot-sequence in the stringlist."
 	  (routines-remove-n-times-char-from-line todo
 	   (- (routines-count-char-at-beginning
 	       todo starchar) 2) starchar))
-    (insert todo-strng)
-    (insert "\n")))
+    (insert todo-string)
+    (insert "\n")) )
 
 (defun insert-today-todos-with-proper-starcount (todo-list)
   "Inserts todos wit hthe right amount of tacound to fit into the
 today-tree."
   (mapcar
-     #'(lambda (string) 
-	 (if string
-	     (insert-todo-with-proper-starcount string)))
+     #'(lambda (strng) 
+	 (if strng
+	     (insert-todo-with-proper-starcount strng)))
      todo-list))
   
 (defun routines-insert-today-as-new-bg ()
