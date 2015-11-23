@@ -285,21 +285,21 @@ knot-sequence in the stringlist."
 (defun insert-todo-with-proper-starcount (todo)
   "Insert a single todo ith right starcount."
   (progn
-    (setf strng
-	  (routines-remove-n-times-char-from-line strng
+    (setf todo-string
+	  (routines-remove-n-times-char-from-line todo
 	   (- (routines-count-char-at-beginning
-	       strng starchar) 2) starchar))
-    (insert strng)
+	       todo starchar) 2) starchar))
+    (insert todo-strng)
     (insert "\n")))
 
 (defun insert-today-todos-with-proper-starcount (todo-list)
   "Inserts todos wit hthe right amount of tacound to fit into the
 today-tree."
   (mapcar
-     #'(lambda (strng) 
-	 (if strng
-	     (insert-todo-with-proper-starcount string))
-     todo-list)))
+     #'(lambda (string) 
+	 (if string
+	     (insert-todo-with-proper-starcount string)))
+     todo-list))
   
 (defun routines-insert-today-as-new-bg ()
   "Creates a string of today TODO items as an outline tree and
